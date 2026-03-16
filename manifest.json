@@ -1,0 +1,14 @@
+{
+  "name": "Habit Garden",
+  "short_name": "Habit Garden",
+  "description": "Grow habits, grow plants.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f7f4",
+  "theme_color": "#2e7d32",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
