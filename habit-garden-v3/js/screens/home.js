@@ -3,11 +3,15 @@ HG.screens = HG.screens || {};
 
 HG.screens.home = {
   render() {
-    const done  = HG.state.completedToday;
-    const total = HG.data.habits.length;
-    const count = done.length;
-    const pct   = Math.round(count / total * 100);
-    const name  = (HG.data.user.name || 'there').split(' ')[0];
+    const habits = HG.data.habits || [];
+    const total = habits.length;
+    // Calculate count directly from progress state for consistency
+    const count = habits.filter(h => h && HG.state.progress[h.id]?.done).length;
+    const pct = total > 0 ? Math.round(count / total * 100) : 0;
+    const name = (HG.data.user?.name || 'there').split(' ')[0];
+
+    // Progress colour for header strip
+    const progressColor = pct === 100 ? '#22c55e' : pct > 50 ? '#3bab61' : '#5eab73';
 
     return `
     <div class="home-header">
@@ -103,48 +107,99 @@ HG.screens.home = {
       <div class="prog-track">
         <div class="prog-fill" style="width:${pct}%"></div>
       </div>
-      ${HG.data.habits.map(h => this._pill(h)).join('')}
+      ${habits.length === 0
+        ? `<div style="text-align:center;padding:32px 18px;color:var(--tx3)">
+             <div style="font-size:48px;margin-bottom:12px">🌱</div>
+             <div style="font-size:15px;font-weight:600;color:var(--tx2)">No habits yet</div>
+             <div style="font-size:13px;margin-top:6px">Tap the <b>+</b> button to plant your first habit</div>
+           </div>`
+        : habits.map(h => this._pill(h)).join('')
+      }
     </div>`;
   },
 
   _pill(h) {
-    const done = HG.state.completedToday.includes(h.id);
-    return `
-    <div class="hpill${done?' done':''}" onclick="HG.screens.home.pillTap('${h.id}')">
-      <div class="hpill-ic" style="background:${h.color}">${h.icon}</div>
-      <div class="hpill-inf">
-        <div class="hpill-n">${h.name}</div>
-        <div class="hpill-s">${done
-          ? `${h.doneVal || h.target+' '+h.metric} · done ✓`
-          : `Target: ${h.target} ${h.metric}${h.couple ? ' · Couple with '+h.couple : ''}`
-        }</div>
-      </div>
-      <span class="htm">${h.time}</span>
-      <div class="chk${done?' done':''}">
-        ${done
+    try {
+      const progress = (HG.state && HG.state.progress) ? HG.state.progress[h.id] : null;
+      const logged = (progress && progress.logged) ? Number(progress.logged) : 0;
+      const fullyDone = (progress && progress.done) || false;
+      const target = Number(h.target) || 1;
+      const metric = h.metric || 'units';
+      const remaining = Math.max(0, target - logged);
+      const pillPct = Math.min(100, Math.round((logged / target) * 100));
+
+      // Status line text
+      let statusText;
+      if (fullyDone) {
+        statusText = `${logged} ${metric} · done ✓`;
+      } else if (logged > 0) {
+        statusText = `${logged} ${metric} logged · <b style="color:var(--g600)">${remaining} ${metric} remaining</b>`;
+      } else {
+        statusText = `Target: ${target} ${metric}`;
+      }
+
+      return `
+      <div class="hpill${fullyDone ? ' done' : logged > 0 ? ' partial' : ''}" 
+           style="opacity:1 !important; visibility:visible !important"
+           onclick="HG.screens.home.pillTap('${h.id}')">
+        <div class="hpill-ic" style="background:${h.color || '#e8f5e9'}">${h.icon || '🌱'}</div>
+        <div class="hpill-inf">
+          <div class="hpill-n">${h.name || 'Unnamed'}</div>
+          <div class="hpill-s">${statusText}</div>
+          ${logged > 0 && !fullyDone ? `
+          <div class="hpill-prog-wrap">
+            <div class="hpill-prog-bar" style="width:${pillPct}%"></div>
+          </div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <span class="htm">${h.time || ''}</span>
+          <div class="chk${fullyDone ? ' done' : ''}">
+            ${fullyDone
           ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
-          : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`
+          : logged > 0
+            ? `<span style="font-size:11px;font-weight:700;color:var(--g600)">${pillPct}%</span>`
+            : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`
         }
-      </div>
-    </div>`;
+          </div>
+        </div>
+      </div>`;
+    } catch (e) {
+      console.error('Pill render error', e, h);
+      return '';
+    }
   },
 
   pillTap(id) {
-    if (HG.state.completedToday.includes(id)) {
-      HG.util.toast('Already logged today! 🌿');
+    const progress = HG.state.progress[id];
+    if (progress?.done) {
+      HG.util.toast('Already completed today! 🌿');
       return;
     }
     const habit = HG.data.habits.find(h => h.id === id);
     if (habit) HG.screens.complete.open(habit);
   },
 
-  markDone(id) {
-    if (!HG.state.completedToday.includes(id)) {
-      HG.state.completedToday.push(id);
-      HG.state.save();
+  // Called after a completion is submitted — updates local state and re-renders
+  recordProgress(habitId, loggedVal, fullyDone) {
+    const prev = HG.state.progress[habitId] || { logged: 0, done: false };
+    const newLogged = prev.logged + Number(loggedVal);
+    const habit = HG.data.habits.find(h => h.id === habitId);
+    const target = Number(habit?.target || 1);
+    const isDone = fullyDone || newLogged >= target;
+
+    HG.state.progress[habitId] = { logged: newLogged, done: isDone };
+    if (isDone && !HG.state.completedToday.includes(habitId)) {
+      HG.state.completedToday.push(habitId);
     }
-    // Re-render home if visible
-    const s = document.getElementById('scr-home');
-    if (s && s.classList.contains('on')) s.innerHTML = HG.screens.home.render();
+    HG.state.save();
+
+    // Re-render via central nav refresh (centralizes visibility safety)
+    if (HG.nav.current === 'home') {
+      HG.nav.refresh();
+    }
+  },
+
+  markDone(id) {
+    this.recordProgress(id, HG.data.habits.find(h => h.id === id)?.target || 1, true);
   }
 };

@@ -52,6 +52,9 @@ HG.screens.addHabit = {
       if (cmw) cmw.style.display = 'block';
       if (st) st.textContent = 'Custom · Metric';
       if (mo) mo.innerHTML = all.map(m => `<div class="mopt" onclick="HG.screens.addHabit.selMetricFn(this,'${m}')">${m}</div>`).join('');
+      // Default custom to 'units' or first in list
+      this.selMetric = 'units';
+      if (tu) tu.textContent = 'units';
     } else {
       if (cnw) cnw.style.display = 'none';
       if (cmw) cmw.style.display = 'none';
@@ -102,13 +105,14 @@ HG.screens.addHabit = {
     const visEl = document.querySelector('.vis-opts .vopt.on');
     const vis = visEl ? (visEl.textContent.includes('Private') ? 'private' : visEl.textContent.includes('Public') ? 'public' : 'peers') : 'peers';
 
-    // gather habit data
+    // gather habit data — all fields guaranteed defined (no undefined)
+    const customMetric = document.getElementById('custom-metric')?.value?.trim();
     const habitData = {
       name: name,
-      icon: this.isCustom ? '✏️' : this.preset.icon,
-      color: this.preset ? this.preset.color : '#e8f5e9',
-      metric: this.selMetric || (this.preset ? this.preset.default : 'units'),
-      target: document.getElementById('target-val')?.value || 1,
+      icon: this.isCustom ? '✏️' : (this.preset?.icon || '✏️'),
+      color: this.preset?.color || '#e8f5e9',
+      metric: (this.isCustom && customMetric) ? customMetric : (this.selMetric || this.preset?.default || 'units'),
+      target: Number(document.getElementById('target-val')?.value) || 1,
       time: `${document.getElementById('t-from')?.value || '07:00'}–${document.getElementById('t-to')?.value || '08:00'}`,
       presetId: this.preset?.id || 'custom',
       visibility: vis
@@ -116,28 +120,47 @@ HG.screens.addHabit = {
 
     // show loading state on button
     const btn = document.querySelector('#fs4 .primary-btn');
-    const oldText = btn.innerHTML;
-    btn.innerHTML = '<span>⏳</span> Saving...';
-    btn.disabled = true;
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) { btn.innerHTML = '<span>⏳</span> Saving…'; btn.disabled = true; }
 
     // save to DB
     const newId = await HG.db.addHabit(habitData);
 
-    btn.innerHTML = oldText;
-    btn.disabled = false;
+    if (btn) { btn.innerHTML = oldText; btn.disabled = false; }
     this.close();
 
     if (newId) {
-      // Add to local state manually so we don't have to refetch everything
-      habitData.id = newId;
-      HG.data.habits.push(habitData);
+      try {
+        // Optimistic local update: push the new habit so it shows up even if fetch is slow
+        const optimisticHabit = {
+          id: newId,
+          ...habitData,
+          ownerId: HG.state?.uid,
+          createdAt: { seconds: Math.floor(Date.now() / 1000) }
+        };
+        if (!HG.data.habits.find(h => h.id === newId)) {
+          HG.data.habits.push(optimisticHabit);
+        }
 
-      // trigger re-render
-      HG.nav.go('home');
+        // Delay slightly to allow Firestore consistency, then re-fetch
+        await new Promise(r => setTimeout(r, 150));
+        const [habits, plants] = await Promise.all([
+          HG.db.fetchHabits(),
+          HG.db.fetchPlants(),
+        ]);
+        HG.data.habits = habits;
+        HG.data.plants = plants;
 
-      HG.util.toast(this.grpOn ? `✅ ${name} added! Trybe invites sent 🌿` : `✅ ${name} added! Alarms set 🌿`);
+        // Refresh home screen in-place
+        HG.nav.current = 'home';
+        HG.nav.refresh();
+        HG.util.toast(this.grpOn ? `✅ ${name} added! Trybe invites sent 🌿` : `✅ ${name} added! 🌿`);
+      } catch (e) {
+        console.error('Post-save refresh error:', e);
+        HG.util.toast('Habit saved! Refresh if it doesn\'t show.');
+      }
     } else {
-      HG.util.toast('Failed to save habit');
+      HG.util.toast('❌ Failed to save habit — check console');
     }
   },
 
@@ -273,10 +296,14 @@ HG.screens.complete = {
 
   open(habit) {
     this.habit = habit; this.moments = 0; this.locAdded = false;
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const progress = HG.state.progress[habit.id] || { logged: 0, done: false };
+    const remaining = Math.max(0, habit.target - progress.logged);
     set('comp-title', 'Complete ' + habit.name);
-    set('comp-sub', `Target: ${habit.target} ${habit.metric} · Add your moments`);
+    set('comp-sub', remaining > 0
+      ? `Target: ${habit.target} ${habit.metric} · <b style="color:var(--g600)">${remaining} ${habit.metric} remaining</b>`
+      : `Target: ${habit.target} ${habit.metric} · Done! ✓`);
     set('comp-plant-ico', HG.data.plants[habit.plant]?.emoji || '🌱');
     set('comp-unit', habit.metric);
     setVal('comp-metric', '');
@@ -314,36 +341,55 @@ HG.screens.complete = {
   },
 
   async submit() {
-    if (this.moments === 0) { HG.util.toast('Add at least one photo or video'); return; }
-    const val = document.getElementById('comp-metric')?.value;
-    if (!val) { HG.util.toast('Enter your metric value'); return; }
-    const caption = document.querySelector('#ov-complete textarea')?.value;
+    const valStr = document.getElementById('comp-metric')?.value?.trim();
+    if (!valStr) { HG.util.toast('Enter how much you completed'); return; }
+    const logged = parseFloat(valStr);
+    if (isNaN(logged) || logged <= 0) { HG.util.toast('Enter a valid number'); return; }
+
+    const habit = this.habit;
+    const target = Number(habit?.target || 1);
+    const metric = habit?.metric || 'units';
+    const caption = document.querySelector('#ov-complete textarea')?.value || '';
     const loc = this.locAdded ? document.getElementById('loc-text')?.textContent.split('·')[0].trim() : null;
+
+    // Accumulate with previous partial logs for today
+    const prev = HG.state.progress[habit.id] || { logged: 0, done: false };
+    const totalLogged = prev.logged + logged;
+    const remaining = Math.max(0, target - totalLogged);
+    const isDone = totalLogged >= target;
 
     // show loading state
     const btn = document.querySelector('#ov-complete .primary-btn');
-    const oldHtml = btn.innerHTML;
-    btn.innerHTML = '<span>⏳</span> Saving...';
-    btn.disabled = true;
+    const oldHtml = btn ? btn.innerHTML : '';
+    if (btn) { btn.innerHTML = '<span>⏳</span> Saving…'; btn.disabled = true; }
 
-    // save to DB
-    await HG.db.completeHabit(this.habit?.id, val, caption, loc);
+    // save to Firestore in background (non-blocking)
+    HG.db.completeHabit(habit?.id, `${logged} ${metric}`, caption, loc)
+      .catch(e => console.error('completeHabit background error', e))
+      .finally(() => {
+        // Even if DB write fails, update local UI for responsiveness
+        HG.screens.home.recordProgress(habit.id, logged, isDone);
+        // Update local plant streak if fully done
+        if (isDone && habit && HG.data.plants[habit.id]) {
+          HG.data.plants[habit.id].streak = (HG.data.plants[habit.id].streak || 0) + 1;
+        }
+      });
 
-    btn.innerHTML = oldHtml;
-    btn.disabled = false;
+    if (btn) { btn.innerHTML = oldHtml; btn.disabled = false; }
 
-    const wd = document.getElementById('wdrops'); if (wd) wd.style.display = 'flex';
+    // Water drop animation
+    const wd = document.getElementById('wdrops');
+    if (wd) wd.style.display = 'flex';
+
     setTimeout(() => {
       this.close();
-      if (this.habit) HG.screens.home.markDone(this.habit.id);
-
-      // update local plant data
-      if (this.habit && HG.data.plants[this.habit.id]) {
-        HG.data.plants[this.habit.id].streak++;
+      // Smart toast
+      if (isDone) {
+        HG.util.toast(`🌿 ${habit.name} complete! Plant watered! 🎉`);
+      } else {
+        HG.util.toast(`✅ ${logged} ${metric} logged · ${remaining} ${metric} remaining`);
       }
-
-      HG.util.toast(`💧 Plant watered! Moment live on feed · 24h`);
-    }, 1200);
+    }, 800);
   },
 
   html() {
@@ -353,7 +399,7 @@ HG.screens.complete = {
       <div class="handle"></div>
       <div class="sh-body">
         <div class="sh-t" id="comp-title">Complete habit</div>
-        <div class="sh-s" id="comp-sub">Add moments, metric &amp; location</div>
+        <div class="sh-s" id="comp-sub" style="font-size:12.5px">Add moments, metric &amp; location</div>
         <div class="water-hero">
           <span class="water-plant-ico" id="comp-plant-ico">🌸</span>
           <div class="water-hint">This plant will be watered on completion</div>
