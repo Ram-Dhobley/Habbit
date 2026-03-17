@@ -58,13 +58,14 @@ function init() {
   const app = document.getElementById('main-app');
   if (app) {
     // Remove any old overlays first
-    ['ov-add','ov-complete','ov-plant'].forEach(id => {
+    ['ov-add', 'ov-complete', 'ov-plant', 'ov-onboarding'].forEach(id => {
       const old = document.getElementById(id);
       if (old) old.remove();
     });
     app.insertAdjacentHTML('beforeend', HG.screens.addHabit.html());
     app.insertAdjacentHTML('beforeend', HG.screens.complete.html());
     app.insertAdjacentHTML('beforeend', HG.screens.plantDetail.html());
+    app.insertAdjacentHTML('beforeend', HG.screens.onboarding.html());
   }
 
   // Toast element

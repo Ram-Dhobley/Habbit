@@ -16,12 +16,12 @@ HG.screens.notifs = {
     </div>
     <div class="notif-section-label">Requests</div>
     ${visible.length
-      ? visible.map(r => this._req(r)).join('')
-      : `<div style="padding:12px 18px;font-size:13px;color:var(--tx3)">No pending requests</div>`}
+        ? visible.map(r => this._req(r)).join('')
+        : `<div style="padding:12px 18px;font-size:13px;color:var(--tx3)">No pending requests</div>`}
     <div class="notif-section-label" style="margin-top:4px">Activity</div>
     <div style="background:var(--surf);margin:0 18px;border-radius:14px;border:0.5px solid var(--bdr);overflow:hidden">
       ${activity.map((a, i) => `
-      <div class="act-notif${a.unread?' unread':''}" style="${i===activity.length-1?'border:none':''}">
+      <div class="act-notif${a.unread ? ' unread' : ''}" style="${i === activity.length - 1 ? 'border:none' : ''}">
         <div class="an-av" style="background:${a.avatarBg}">
           ${a.initials}
           ${a.ico ? `<div class="an-ico" style="background:${a.icoBg}">${a.ico}</div>` : ''}
@@ -96,14 +96,14 @@ HG.screens.messages = {
         <div class="conv-av" style="background:${m.avatarBg}">
           ${m.initials}
           ${m.online ? '<div class="conv-on"></div>' : ''}
-          ${m.type==='trybe' ? `<div class="conv-gbadge">${m.members}</div>` : ''}
+          ${m.type === 'trybe' ? `<div class="conv-gbadge">${m.members}</div>` : ''}
         </div>
         <div style="flex:1;min-width:0">
           <div class="conv-name">${m.name}
-            <span class="ctag" style="${m.type==='trybe'
-              ? 'color:var(--amber);background:var(--amber-l)'
-              : 'color:var(--tx3);background:var(--surf2)'}">
-              ${m.type==='trybe' ? 'Trybe' : 'Peer'}
+            <span class="ctag" style="${m.type === 'trybe'
+        ? 'color:var(--amber);background:var(--amber-l)'
+        : 'color:var(--tx3);background:var(--surf2)'}">
+              ${m.type === 'trybe' ? 'Trybe' : 'Peer'}
             </span>
           </div>
           <div class="conv-prev">${m.preview}</div>
@@ -166,13 +166,6 @@ HG.screens.profile = {
             <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
             <line x1="15.41" y1="6.51"  x2="8.59"  y2="10.49"/>
-          </svg>
-        </div>
-        <div class="pa-ico" onclick="HG.screens.profile.signOut()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
         </div>
       </div>
@@ -238,8 +231,38 @@ HG.screens.profile = {
         <div class="pg-label" style="background:none;color:var(--tx3)">Pin</div>
       </div>
     </div>
-    <div style="height:14px"></div>
-    <div style="margin:0 18px 20px;background:linear-gradient(135deg,#4527a0,#7c3aed);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px">
+    <div class="sec-l" style="margin-top:14px">Achievements</div>
+    <div class="achievements-grid">
+      <div class="ach-card" style="${user.stats.plants >= 1 ? '' : 'filter:grayscale(1);opacity:0.5'}">
+        <div class="ach-ico">🌱</div>
+        <div class="ach-info">
+          <div class="ach-name">First Sprout</div>
+          <div class="ach-desc">Plant 1 habit</div>
+        </div>
+      </div>
+      <div class="ach-card" style="${user.stats.bestStreak >= 7 ? '' : 'filter:grayscale(1);opacity:0.5'}">
+        <div class="ach-ico">🔥</div>
+        <div class="ach-info">
+          <div class="ach-name">On Fire</div>
+          <div class="ach-desc">7 day streak</div>
+        </div>
+      </div>
+      <div class="ach-card" style="${user.stats.daysDone >= 30 ? '' : 'filter:grayscale(1);opacity:0.5'}">
+        <div class="ach-ico">🌟</div>
+        <div class="ach-info">
+          <div class="ach-name">Consistency</div>
+          <div class="ach-desc">30 days logged</div>
+        </div>
+      </div>
+      <div class="ach-card" style="${user.stats.plants >= 5 ? '' : 'filter:grayscale(1);opacity:0.5'}">
+        <div class="ach-ico">🌳</div>
+        <div class="ach-info">
+          <div class="ach-name">Gardener</div>
+          <div class="ach-desc">Grow 5 plants</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin:0 18px 24px;background:linear-gradient(135deg,#4527a0,#7c3aed);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px">
       <div style="font-size:24px">✨</div>
       <div>
         <div style="font-size:13.5px;font-weight:600;color:#fff">Upgrade to Premium</div>
@@ -249,6 +272,16 @@ HG.screens.profile = {
         style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;
                border-radius:8px;padding:7px 12px;font-size:12px;font-weight:500;
                cursor:pointer;font-family:var(--fn)">Upgrade</button>
+    </div>
+    <div class="logout-btn-wrap">
+      <button class="logout-btn" onclick="HG.screens.profile.signOut()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sign Out
+      </button>
     </div>`;
   },
 
@@ -256,7 +289,7 @@ HG.screens.profile = {
     HG.util.toast('Signing out…');
     try {
       if (window.FB && window.FB.signOutUser) await window.FB.signOutUser();
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
     // Reset state and show auth screen
     localStorage.clear();
     location.reload();

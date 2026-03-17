@@ -43,21 +43,21 @@ HG.screens.addHabit = {
   _buildStep2() {
     const cnw = document.getElementById('cname-w');
     const cmw = document.getElementById('cm-w');
-    const mo  = document.getElementById('metric-opts');
-    const tu  = document.getElementById('target-unit');
-    const st  = document.getElementById('s2-title');
-    const all = ['km','min','steps','pages','reps','sets','laps','hr','litres','sessions','pomodoros'];
+    const mo = document.getElementById('metric-opts');
+    const tu = document.getElementById('target-unit');
+    const st = document.getElementById('s2-title');
+    const all = ['km', 'min', 'steps', 'pages', 'reps', 'sets', 'laps', 'hr', 'litres', 'sessions', 'pomodoros'];
     if (this.isCustom) {
       if (cnw) cnw.style.display = 'block';
       if (cmw) cmw.style.display = 'block';
-      if (st)  st.textContent = 'Custom · Metric';
-      if (mo)  mo.innerHTML = all.map(m => `<div class="mopt" onclick="HG.screens.addHabit.selMetricFn(this,'${m}')">${m}</div>`).join('');
+      if (st) st.textContent = 'Custom · Metric';
+      if (mo) mo.innerHTML = all.map(m => `<div class="mopt" onclick="HG.screens.addHabit.selMetricFn(this,'${m}')">${m}</div>`).join('');
     } else {
       if (cnw) cnw.style.display = 'none';
       if (cmw) cmw.style.display = 'none';
-      if (st)  st.textContent = this.preset.name + ' · Metric';
-      if (mo)  mo.innerHTML = this.preset.metrics.map((m, i) =>
-        `<div class="mopt${i===0?' on':''}" onclick="HG.screens.addHabit.selMetricFn(this,'${m}')">${m}</div>`
+      if (st) st.textContent = this.preset.name + ' · Metric';
+      if (mo) mo.innerHTML = this.preset.metrics.map((m, i) =>
+        `<div class="mopt${i === 0 ? ' on' : ''}" onclick="HG.screens.addHabit.selMetricFn(this,'${m}')">${m}</div>`
       ).join('');
       this.selMetric = this.preset.metrics[0];
       if (tu) tu.textContent = this.selMetric;
@@ -71,7 +71,7 @@ HG.screens.addHabit = {
     if (tu) tu.textContent = m;
   },
   selFreq(el) { document.querySelectorAll('.freq-opts .fopt').forEach(o => o.classList.remove('on')); el.classList.add('on'); },
-  selVis(el)  { document.querySelectorAll('.vis-opts .vopt').forEach(o => o.classList.remove('on'));  el.classList.add('on'); },
+  selVis(el) { document.querySelectorAll('.vis-opts .vopt').forEach(o => o.classList.remove('on')); el.classList.add('on'); },
   toggleTrybe() {
     this.grpOn = !this.grpOn;
     const sw = document.getElementById('trybe-sw');
@@ -81,25 +81,64 @@ HG.screens.addHabit = {
   },
   toggleInv(el) { el.classList.toggle('on'); el.textContent = el.classList.contains('on') ? '✓' : ''; },
   _buildConfirm() {
-    const name   = this.isCustom ? (document.getElementById('custom-name')?.value || 'Custom habit') : this.preset.name;
-    const ico    = this.isCustom ? '✏️' : this.preset.icon;
+    const name = this.isCustom ? (document.getElementById('custom-name')?.value || 'Custom habit') : this.preset.name;
+    const ico = this.isCustom ? '✏️' : this.preset.icon;
     const target = document.getElementById('target-val')?.value || '?';
-    const unit   = this.selMetric || (this.preset ? this.preset.default : 'units');
-    const from   = document.getElementById('t-from')?.value || '07:00';
-    const to     = document.getElementById('t-to')?.value   || '08:00';
-    const visEl  = document.querySelector('.vis-opts .vopt.on');
-    const vis    = visEl ? visEl.textContent.trim().split('\n')[0] : '👥 Peers';
-    const ci = document.getElementById('confirm-ico');   if (ci) ci.textContent = ico;
-    const cn = document.getElementById('confirm-name');  if (cn) cn.textContent = name;
-    const cm = document.getElementById('confirm-meta');  if (cm) cm.textContent = `${target} ${unit} · Daily · ${from}–${to}`;
-    const cv = document.getElementById('confirm-vis');   if (cv) cv.textContent = vis;
-    const cg = document.getElementById('confirm-grp');   if (cg) cg.textContent = this.grpOn ? 'Yes · Trybe chat created' : 'No';
+    const unit = this.selMetric || (this.preset ? this.preset.default : 'units');
+    const from = document.getElementById('t-from')?.value || '07:00';
+    const to = document.getElementById('t-to')?.value || '08:00';
+    const visEl = document.querySelector('.vis-opts .vopt.on');
+    const vis = visEl ? visEl.textContent.trim().split('\n')[0] : '👥 Peers';
+    const ci = document.getElementById('confirm-ico'); if (ci) ci.textContent = ico;
+    const cn = document.getElementById('confirm-name'); if (cn) cn.textContent = name;
+    const cm = document.getElementById('confirm-meta'); if (cm) cm.textContent = `${target} ${unit} · Daily · ${from}–${to}`;
+    const cv = document.getElementById('confirm-vis'); if (cv) cv.textContent = vis;
+    const cg = document.getElementById('confirm-grp'); if (cg) cg.textContent = this.grpOn ? 'Yes · Trybe chat created' : 'No';
     const ca = document.getElementById('confirm-alarm'); if (ca) ca.textContent = `🔔 ${from} start · ${to} end`;
   },
-  confirm() {
+  async confirm() {
     const name = this.isCustom ? (document.getElementById('custom-name')?.value || 'New habit') : this.preset.name;
+    const desc = this.isCustom ? '' : 'Preset habit';
+    const visEl = document.querySelector('.vis-opts .vopt.on');
+    const vis = visEl ? (visEl.textContent.includes('Private') ? 'private' : visEl.textContent.includes('Public') ? 'public' : 'peers') : 'peers';
+
+    // gather habit data
+    const habitData = {
+      name: name,
+      icon: this.isCustom ? '✏️' : this.preset.icon,
+      color: this.preset ? this.preset.color : '#e8f5e9',
+      metric: this.selMetric || (this.preset ? this.preset.default : 'units'),
+      target: document.getElementById('target-val')?.value || 1,
+      time: `${document.getElementById('t-from')?.value || '07:00'}–${document.getElementById('t-to')?.value || '08:00'}`,
+      presetId: this.preset?.id || 'custom',
+      visibility: vis
+    };
+
+    // show loading state on button
+    const btn = document.querySelector('#fs4 .primary-btn');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<span>⏳</span> Saving...';
+    btn.disabled = true;
+
+    // save to DB
+    const newId = await HG.db.addHabit(habitData);
+
+    btn.innerHTML = oldText;
+    btn.disabled = false;
     this.close();
-    HG.util.toast(this.grpOn ? `✅ ${name} added! Trybe invites sent 🌿` : `✅ ${name} added! Alarms set 🌿`);
+
+    if (newId) {
+      // Add to local state manually so we don't have to refetch everything
+      habitData.id = newId;
+      HG.data.habits.push(habitData);
+
+      // trigger re-render
+      HG.nav.go('home');
+
+      HG.util.toast(this.grpOn ? `✅ ${name} added! Trybe invites sent 🌿` : `✅ ${name} added! Alarms set 🌿`);
+    } else {
+      HG.util.toast('Failed to save habit');
+    }
   },
 
   html() {
@@ -117,7 +156,7 @@ HG.screens.addHabit = {
           <div class="fl-label">Choose a preset</div>
           <div class="preset-grid">
             ${HG.data.presets.map(p =>
-              `<div class="preset-card" onclick="HG.screens.addHabit.selectPreset(this,'${p.id}')">
+      `<div class="preset-card" onclick="HG.screens.addHabit.selectPreset(this,'${p.id}')">
                 <span>${p.icon}</span><p>${p.name}</p>
               </div>`).join('')}
           </div>
@@ -236,10 +275,10 @@ HG.screens.complete = {
     this.habit = habit; this.moments = 0; this.locAdded = false;
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-    set('comp-title',     'Complete ' + habit.name);
-    set('comp-sub',       `Target: ${habit.target} ${habit.metric} · Add your moments`);
+    set('comp-title', 'Complete ' + habit.name);
+    set('comp-sub', `Target: ${habit.target} ${habit.metric} · Add your moments`);
     set('comp-plant-ico', HG.data.plants[habit.plant]?.emoji || '🌱');
-    set('comp-unit',      habit.metric);
+    set('comp-unit', habit.metric);
     setVal('comp-metric', '');
     const wd = document.getElementById('wdrops'); if (wd) wd.style.display = 'none';
     const lt = document.getElementById('loc-text'); if (lt) lt.textContent = 'Add location (optional)';
@@ -255,12 +294,12 @@ HG.screens.complete = {
     this.moments++;
     const shelf = document.getElementById('media-shelf');
     if (!shelf) return;
-    const icons = ['📷','🎥','📸','🖼️'];
-    const bgs   = ['#e8f5e9','#e3f2fd','#fff3e0','#fce4ec'];
+    const icons = ['📷', '🎥', '📸', '🖼️'];
+    const bgs = ['#e8f5e9', '#e3f2fd', '#fff3e0', '#fce4ec'];
     const th = document.createElement('div');
     th.className = 'mthumb';
-    th.style.background = bgs[(this.moments-1)%4];
-    th.textContent = icons[(this.moments-1)%4];
+    th.style.background = bgs[(this.moments - 1) % 4];
+    th.textContent = icons[(this.moments - 1) % 4];
     const btn = shelf.querySelector('.add-btn');
     shelf.insertBefore(th, btn);
     HG.util.toast(`Moment ${this.moments} added`);
@@ -274,14 +313,35 @@ HG.screens.complete = {
     if (la) la.style.display = this.locAdded ? 'inline' : 'none';
   },
 
-  submit() {
+  async submit() {
     if (this.moments === 0) { HG.util.toast('Add at least one photo or video'); return; }
     const val = document.getElementById('comp-metric')?.value;
     if (!val) { HG.util.toast('Enter your metric value'); return; }
+    const caption = document.querySelector('#ov-complete textarea')?.value;
+    const loc = this.locAdded ? document.getElementById('loc-text')?.textContent.split('·')[0].trim() : null;
+
+    // show loading state
+    const btn = document.querySelector('#ov-complete .primary-btn');
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = '<span>⏳</span> Saving...';
+    btn.disabled = true;
+
+    // save to DB
+    await HG.db.completeHabit(this.habit?.id, val, caption, loc);
+
+    btn.innerHTML = oldHtml;
+    btn.disabled = false;
+
     const wd = document.getElementById('wdrops'); if (wd) wd.style.display = 'flex';
     setTimeout(() => {
       this.close();
       if (this.habit) HG.screens.home.markDone(this.habit.id);
+
+      // update local plant data
+      if (this.habit && HG.data.plants[this.habit.id]) {
+        HG.data.plants[this.habit.id].streak++;
+      }
+
       HG.util.toast(`💧 Plant watered! Moment live on feed · 24h`);
     }, 1200);
   },
@@ -333,7 +393,7 @@ HG.screens.plantDetail = {
     if (!p) return;
     const set = (el, val) => { const e = document.getElementById(el); if (e) e.textContent = val; };
     set('pd-stage', p.emoji);
-    set('pd-name',  p.name);
+    set('pd-name', p.name);
     set('pd-badge', `🔥 ${p.streak} day streak · ${p.stage}`);
     this._heatmap(p.streak);
     this._stages(id);
@@ -350,8 +410,8 @@ HG.screens.plantDetail = {
       const col = document.createElement('div'); col.className = 'hw';
       for (let d = 0; d < 7; d++) {
         const day = document.createElement('div');
-        const fe  = (12-w)*7 + (6-d);
-        day.className = 'hd' + (fe < streak ? (Math.random()>.08?' done':' partial') : fe < streak+10 && Math.random()>.5 ? ' partial' : '');
+        const fe = (12 - w) * 7 + (6 - d);
+        day.className = 'hd' + (fe < streak ? (Math.random() > .08 ? ' done' : ' partial') : fe < streak + 10 && Math.random() > .5 ? ' partial' : '');
         col.appendChild(day);
       }
       hm.appendChild(col);
@@ -360,25 +420,25 @@ HG.screens.plantDetail = {
 
   _stages(id) {
     const stages = [
-      ['🌰','Seed','Week 1','done'],
-      ['🌿','Bud','Week 2','done'],
-      ['🌱','Sapling','Weeks 3–4',    id==='read'?'cur':'done'],
-      ['🪴','Young plant','Weeks 5–8', id==='med'?'cur':id==='read'?'':'done'],
-      ['🌸','Flowering','Weeks 9–12',  id==='med'?'done':id==='run'?'done':''],
-      ['🌳','Mature Tree','Week 12+',  id==='run'?'cur':''],
-      ['🌴','Jungle Mode 🔒','52-week streak','lock']
+      ['🌰', 'Seed', 'Week 1', 'done'],
+      ['🌿', 'Bud', 'Week 2', 'done'],
+      ['🌱', 'Sapling', 'Weeks 3–4', id === 'read' ? 'cur' : 'done'],
+      ['🪴', 'Young plant', 'Weeks 5–8', id === 'med' ? 'cur' : id === 'read' ? '' : 'done'],
+      ['🌸', 'Flowering', 'Weeks 9–12', id === 'med' ? 'done' : id === 'run' ? 'done' : ''],
+      ['🌳', 'Mature Tree', 'Week 12+', id === 'run' ? 'cur' : ''],
+      ['🌴', 'Jungle Mode 🔒', '52-week streak', 'lock']
     ];
     const sl = document.getElementById('stage-list');
     if (!sl) return;
     sl.innerHTML = stages.map((s, i) => {
-      const dot = s[3]==='done' ? 'background:#2e7d32'
-                : s[3]==='cur'  ? 'background:#4caf50;box-shadow:0 0 0 3px #d4f0d4'
-                : 'background:var(--surf3)';
-      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:${i<stages.length-1?'0.5px solid var(--bdr)':'none'};${s[3]==='lock'?'opacity:.38':''}">
+      const dot = s[3] === 'done' ? 'background:#2e7d32'
+        : s[3] === 'cur' ? 'background:#4caf50;box-shadow:0 0 0 3px #d4f0d4'
+          : 'background:var(--surf3)';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:${i < stages.length - 1 ? '0.5px solid var(--bdr)' : 'none'};${s[3] === 'lock' ? 'opacity:.38' : ''}">
         <div style="font-size:21px;width:32px;text-align:center">${s[0]}</div>
         <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;${dot}"></div>
         <div>
-          <div style="font-size:13px;font-weight:500">${s[1]}${s[3]==='cur'?' — you are here':''}</div>
+          <div style="font-size:13px;font-weight:500">${s[1]}${s[3] === 'cur' ? ' — you are here' : ''}</div>
           <div style="font-size:11px;color:var(--tx3);margin-top:1px">${s[2]}</div>
         </div>
       </div>`;
@@ -401,6 +461,72 @@ HG.screens.plantDetail = {
         <div class="sec-l" style="padding-bottom:9px">Growth stages</div>
         <div id="stage-list"></div>
         <div style="height:20px"></div>
+      </div>
+    </div>
+    </div>`;
+  }
+};
+
+// ── ONBOARDING OVERLAY ──────────────────────────────────────
+HG.screens.onboarding = {
+  step: 1,
+
+  open() {
+    this.step = 1;
+    this._showStep(1);
+    const ov = document.getElementById('ov-onboarding');
+    if (ov) ov.classList.add('open');
+  },
+
+  close() {
+    const ov = document.getElementById('ov-onboarding');
+    if (ov) ov.classList.remove('open');
+  },
+
+  _showStep(n) {
+    this.step = n;
+    document.querySelectorAll('#ov-onboarding .flow-step').forEach(s => s.classList.remove('on'));
+    const el = document.getElementById('ob-fs' + n);
+    if (el) el.classList.add('on');
+  },
+
+  goStep(n) {
+    this._showStep(n);
+  },
+
+  finish() {
+    this.close();
+    // Prompt them to add their first habit
+    setTimeout(() => {
+      HG.screens.addHabit.open();
+    }, 400);
+  },
+
+  html() {
+    return `
+    <div class="ov" id="ov-onboarding" style="z-index: 200;">
+    <div class="sheet" style="padding-bottom: 24px;">
+      <div class="handle"></div>
+      <div class="sh-body" style="text-align: center;">
+
+        <div class="flow-step on" id="ob-fs1">
+          <div style="font-size: 72px; padding: 24px 0 12px; line-height: 1;">🌿</div>
+          <div class="sh-t" style="margin-bottom: 12px;">Welcome to Habit Garden</div>
+          <div class="sh-s" style="font-size: 14px; line-height: 1.6; padding: 0 10px; margin-bottom: 32px;">
+            Grow your habits like virtual plants. Every time you complete a habit, your plant grows a little more.
+          </div>
+          <button class="primary-btn" onclick="HG.screens.onboarding.goStep(2)">Next</button>
+        </div>
+
+        <div class="flow-step" id="ob-fs2">
+          <div style="font-size: 72px; padding: 24px 0 12px; line-height: 1;">🌍</div>
+          <div class="sh-t" style="margin-bottom: 12px;">Grow with friends</div>
+          <div class="sh-s" style="font-size: 14px; line-height: 1.6; padding: 0 10px; margin-bottom: 32px;">
+            Join Trybes, share moments to the feed, and climb the leaderboard. Building habits is easier together.
+          </div>
+          <button class="primary-btn" onclick="HG.screens.onboarding.finish()">Let's plant a seed!</button>
+        </div>
+
       </div>
     </div>
     </div>`;

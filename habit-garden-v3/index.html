@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
@@ -13,84 +14,103 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="stylesheet" href="/css/app.css">
 </head>
+
 <body>
 
-<!-- Auth screen shown while signed out -->
-<div id="auth-wrap"></div>
+  <!-- Auth screen shown while signed out -->
+  <div id="auth-wrap"></div>
 
-<!-- Main app shown once signed in -->
-<div id="main-app" style="display:none;flex-direction:column;height:100dvh;height:100vh;">
-  <div style="height:env(safe-area-inset-top,0px);background:var(--bg);flex-shrink:0"></div>
-  <div id="screen-container" class="content-area"></div>
-  <nav class="bnav">
-    <button class="ni on" id="ni-home"    onclick="HG.nav.go('home')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </button>
-    <button class="ni" id="ni-feed"       onclick="HG.nav.go('feed')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-    </button>
-    <div class="fab-ni">
-      <div class="fab" onclick="HG.screens.addHabit.open()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" width="20" height="20" color="#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <!-- Main app shown once signed in -->
+  <div id="main-app" style="display:none;flex-direction:column;height:100dvh;height:100vh;">
+    <div style="height:env(safe-area-inset-top,0px);background:var(--bg);flex-shrink:0"></div>
+    <div id="screen-container" class="content-area"></div>
+    <nav class="bnav">
+      <button class="ni on" id="ni-home" onclick="HG.nav.go('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      </button>
+      <button class="ni" id="ni-feed" onclick="HG.nav.go('feed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+        </svg>
+      </button>
+      <div class="fab-ni">
+        <div class="fab" onclick="HG.screens.addHabit.open()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" width="20" height="20"
+            color="#fff">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </div>
       </div>
-    </div>
-    <button class="ni" id="ni-msgs"       onclick="HG.nav.go('msgs')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    </button>
-    <button class="ni" id="ni-profile"    onclick="HG.nav.go('profile')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </button>
-  </nav>
-</div>
+      <button class="ni" id="ni-msgs" onclick="HG.nav.go('msgs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        </svg>
+      </button>
+      <button class="ni" id="ni-profile" onclick="HG.nav.go('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </button>
+    </nav>
+  </div>
 
-<!-- App scripts -->
-<script>window.HG = window.HG || {}; HG.screens = HG.screens || {};</script>
-<script src="/js/data.js"></script>
-<script src="/js/screens/home.js"></script>
-<script src="/js/screens/feed.js"></script>
-<script src="/js/screens/notifs-msgs-profile.js"></script>
-<script src="/js/screens/overlays.js"></script>
-<script src="/js/app.js"></script>
+  <!-- App scripts -->
+  <script>window.HG = window.HG || {}; HG.screens = HG.screens || {};</script>
+  <script src="/js/data.js"></script>
+  <script type="module" src="/js/db.js"></script>
+  <script src="/js/screens/home.js"></script>
+  <script src="/js/screens/feed.js"></script>
+  <script src="/js/screens/notifs-msgs-profile.js"></script>
+  <script src="/js/screens/overlays.js"></script>
+  <script src="/js/app.js"></script>
 
-<!-- Firebase + boot -->
-<script type="module">
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
-         getRedirectResult, onAuthStateChanged, signOut }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+  <!-- Firebase + boot -->
+  <script type="module">
+    import { initializeApp }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+      getRedirectResult, onAuthStateChanged, signOut
+    }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// ── YOUR FIREBASE CONFIG ──────────────────────────────────────
-const firebaseConfig = {
-  apiKey:            "AIzaSyCRy0DzkHNWhzDY1_L1fJXvQ1JN4zEzEjI",
-  authDomain:        "habit-garden-437eb.firebaseapp.com",
-  projectId:         "habit-garden-437eb",
-  storageBucket:     "habit-garden-437eb.firebasestorage.app",
-  messagingSenderId: "619675249259",
-  appId:             "1:619675249259:web:fe476b4db6b53aa0a2df2e",
-  measurementId:     "G-XMQ256SFZX"
-};
-// ─────────────────────────────────────────────────────────────
+    // ── YOUR FIREBASE CONFIG ──────────────────────────────────────
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRy0DzkHNWhzDY1_L1fJXvQ1JN4zEzEjI",
+      authDomain: "habit-garden-437eb.firebaseapp.com",
+      projectId: "habit-garden-437eb",
+      storageBucket: "habit-garden-437eb.firebasestorage.app",
+      messagingSenderId: "619675249259",
+      appId: "1:619675249259:web:fe476b4db6b53aa0a2df2e",
+      measurementId: "G-XMQ256SFZX"
+    };
+    // ─────────────────────────────────────────────────────────────
 
-const fbApp    = initializeApp(firebaseConfig);
-const auth     = getAuth(fbApp);
-const db       = getFirestore(fbApp);
-const storage  = getStorage(fbApp);
-const provider = new GoogleAuthProvider();
+    const fbApp = initializeApp(firebaseConfig);
+    const auth = getAuth(fbApp);
+    const db = getFirestore(fbApp);
+    const storage = getStorage(fbApp);
+    const provider = new GoogleAuthProvider();
 
-// Expose sign-out globally so profile screen can call it
-window.FB = {
-  signOutUser: () => signOut(auth)
-};
+    // Expose sign-out globally so profile screen can call it
+    window.FB = {
+      db: db,
+      signOutUser: () => signOut(auth)
+    };
 
-// ── AUTH SCREEN ───────────────────────────────────────────────
-function showAuthScreen() {
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('auth-wrap').innerHTML = `
+    // ── AUTH SCREEN ───────────────────────────────────────────────
+    function showAuthScreen() {
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('auth-wrap').innerHTML = `
   <div id="auth-screen" style="
     display:flex;flex-direction:column;align-items:center;
     justify-content:center;min-height:100dvh;min-height:100vh;
@@ -121,102 +141,101 @@ function showAuthScreen() {
     </div>
   </div>`;
 
-  document.getElementById('signin-btn').addEventListener('click', async () => {
-    const btn = document.getElementById('signin-btn');
-    btn.textContent = 'Opening Google…';
-    btn.disabled = true;
-    try {
-      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (isMobile) {
-        // Mobile: redirect flow — page will reload, result handled below
-        await signInWithRedirect(auth, provider);
-      } else {
-        // Desktop: popup flow
-        await signInWithPopup(auth, provider);
+      document.getElementById('signin-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('signin-btn');
+        btn.textContent = 'Opening Google…';
+        btn.disabled = true;
+        try {
+          // Always use popup. signInWithRedirect loses app context in Android standalone PWAs.
+          await signInWithPopup(auth, provider);
+        } catch (e) {
+          console.error('Sign-in error:', e);
+          btn.textContent = 'Try again';
+          btn.disabled = false;
+        }
+      });
+    }
+
+    // ── BOOT APP ──────────────────────────────────────────────────
+    async function bootApp(user) {
+      // Initialize DB service early so even if profile save fails, other reads can be attempted
+      if (HG.db) {
+        HG.db.uid = user.uid;
+        HG.db.init();
       }
-    } catch(e) {
-      console.error('Sign-in error:', e);
-      btn.textContent = 'Try again';
-      btn.disabled = false;
+
+      // Fetch or create user profile in Firestore
+      try {
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        let profile;
+        if (snap.exists()) {
+          profile = snap.data();
+        } else {
+          profile = {
+            uid: user.uid,
+            name: user.displayName || 'Habit Grower',
+            email: user.email || '',
+            photoURL: user.photoURL || null,
+            handle: '@' + (user.email?.split('@')[0] || 'user'),
+            city: 'Pune', country: 'India',
+            bio: 'Building good habits 🌱', quote: '',
+            peers: 0, following: 0, followers: 0, trybes: 0,
+            stats: { daysDone: 0, bestStreak: 0, consistency: 0, plants: 0, avgStreak: 0, weeksActive: 0 },
+            createdAt: serverTimestamp()
+          };
+          await setDoc(ref, profile);
+        }
+
+        // Fetch real data
+        const habits = await HG.db.fetchHabits();
+        const plants = await HG.db.fetchPlants();
+        const feed = await HG.db.fetchFeed();
+
+        // Override mock data with fetched real data
+        HG.data.habits = habits || [];
+        HG.data.plants = plants || {};
+
+        // Clear auth screen, show app
+        document.getElementById('auth-wrap').innerHTML = '';
+        document.getElementById('main-app').style.display = 'flex';
+
+        // Boot screens
+        init();
+
+        // If no habits, trigger onboarding
+        if (habits.length === 0) {
+          // Give a slight delay for UI to paint
+          setTimeout(() => {
+            if (HG.screens.onboarding) HG.screens.onboarding.open();
+          }, 300);
+        }
+
+      } catch (e) {
+        console.warn('Firestore error (continuing with defaults):', e);
+        HG.data.user.name = user.displayName || 'Habit Grower';
+        HG.data.user.handle = '@' + (user.email?.split('@')[0] || 'user');
+
+        // Clear auth screen, show app
+        document.getElementById('auth-wrap').innerHTML = '';
+        document.getElementById('main-app').style.display = 'flex';
+        init();
+      }
     }
-  });
-}
 
-// ── BOOT APP ──────────────────────────────────────────────────
-async function bootApp(user) {
-  // Fetch or create user profile in Firestore
-  try {
-    const ref  = doc(db, 'users', user.uid);
-    const snap = await getDoc(ref);
-    let profile;
-    if (snap.exists()) {
-      profile = snap.data();
-    } else {
-      profile = {
-        uid:      user.uid,
-        name:     user.displayName || 'Habit Grower',
-        email:    user.email || '',
-        photoURL: user.photoURL || null,
-        handle:   '@' + (user.email?.split('@')[0] || 'user'),
-        city: 'Pune', country: 'India',
-        bio: 'Building good habits 🌱', quote: '',
-        peers: 0, following: 0, followers: 0, trybes: 0,
-        stats: { daysDone:0, bestStreak:0, consistency:0, plants:0, avgStreak:0, weeksActive:0 },
-        createdAt: serverTimestamp()
-      };
-      await setDoc(ref, profile);
-    }
-    // Patch mock data with real user info
-    HG.data.user.name    = profile.name    || user.displayName || 'Habit Grower';
-    HG.data.user.handle  = profile.handle  || '@user';
-    HG.data.user.bio     = profile.bio     || 'Building good habits 🌱';
-    HG.data.user.quote   = profile.quote   || '"Discipline is choosing between what you want now and what you want most."';
-    HG.data.user.city    = profile.city    || 'Pune';
-    HG.data.user.country = profile.country || 'India';
-  } catch(e) {
-    console.warn('Firestore error (continuing with defaults):', e);
-    HG.data.user.name   = user.displayName || 'Habit Grower';
-    HG.data.user.handle = '@' + (user.email?.split('@')[0] || 'user');
-  }
-
-  // Clear auth screen, show app
-  document.getElementById('auth-wrap').innerHTML = '';
-  document.getElementById('main-app').style.display = 'flex';
-
-  // Boot screens
-  init();
-}
-
-// ── HANDLE MOBILE REDIRECT RESULT FIRST ──────────────────────
-// On mobile after Google redirect, the page reloads.
-// We must call getRedirectResult() before onAuthStateChanged fires
-// otherwise the auth state isn't set yet.
-try {
-  const result = await getRedirectResult(auth);
-  if (result?.user) {
-    // Redirect sign-in succeeded — boot directly
-    await bootApp(result.user);
-    // onAuthStateChanged will also fire but bootApp is idempotent
-  }
-} catch(e) {
-  console.error('Redirect result error:', e);
-  // Show error on auth screen if it's visible
-  const btn = document.getElementById('signin-btn');
-  if (btn) { btn.textContent = 'Try again'; btn.disabled = false; }
-}
-
-// ── AUTH STATE LISTENER ───────────────────────────────────────
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    // User is signed in
-    const appVisible = document.getElementById('main-app').style.display !== 'none';
-    if (!appVisible) await bootApp(user);
-  } else {
-    // User is signed out — show auth screen
-    showAuthScreen();
-  }
-});
-</script>
+    // ── AUTH STATE LISTENER ───────────────────────────────────────
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in
+        const appVisible = document.getElementById('main-app').style.display !== 'none';
+        if (!appVisible) await bootApp(user);
+      } else {
+        // User is signed out — show auth screen
+        showAuthScreen();
+      }
+    });
+  </script>
 
 </body>
+
 </html>
